@@ -1,0 +1,132 @@
+CS35L Homework #9:
+
+1. Created this file named hw9.txt
+Command: vim hw9.txt
+
+
+2. Check out version 3.0 of Diffutils from your repository, into a new branch named "quote"
+Command: git checkout v3.0 -b quote
+
+
+3. Install our change into this branch by running the patch command
+Command: patch -p1 < ../quote-3.0-patch.txt
+
+We get the following output:
+patching file src/cmp.c
+patching file src/diff.c
+patching file src/diff3.c
+patching file src/dir.c
+patching file src/sdiff.c
+patching file src/util.c
+
+
+4. Learn how to use the Emacs function add-change-log-entry-other-window
+I learned how to create a ChangeLog entry using emacs and the command (C-x 4 a).
+
+
+5. Use this function to compose an appropriate ChangeLog entry for your patch
+Command: emacs:
+Command: C-x 4 a
+Command: C-k
+Command: C-x C-c
+
+I first launched emacs and used the command 'C-x 4 a' to create a ChangeLog entry. I simply
+copied the commit message from git-log.txt containing the "maint: quote..." text and 
+modified it by deleting the files that were not changed i.e. I kept only the 6 .c files that
+were modified in the ChangeLog entry. I used the command 'C-k' to kill the lines I didn't
+need and then saved and exited the file using C-x C-c.
+
+
+6. Commit your changes to the new branch using the ChangeLog entry as the commit message
+Command: git commit -aF ChangeLog
+
+
+7. Use the command "git format-patch" to generate a patch file
+Command: git format-patch -1 --stdout > formatted-patch.txt
+
+
+8. Verify partner's patch
+Command: git checkout v3.0 -b partner
+Command: git am duy-formatted-patch.txt
+Commands: ./bootstrap
+	 patch -p0 < patch.diff
+	 ./configure
+	 make
+	 make check
+	 ./src/diff . -
+	 ./src/diff --help
+
+My partner for this project is Duy. I first uploaded his file onto my SEASnet through Cyberduck and then I created and switched to the new branch called 'partner' using the
+command 'git checkout v3.0 -b partner'. 
+
+Then I applied his patch using the command 'git am duy-formatted-patch.txt' and got the
+following output:
+Applying: 2018-12-03 Duy Anh Duong <duyd@lnxsrv07.seas.ucla.edu>
+
+I repeated the steps from the lab to build this version of diffutils using the commands
+./bootstrap, patch -p0 < patch.diff, ./configure, make, and make check. The command make 
+check received error messages but the TA said it is okay as long as diff works.
+The following is the error message:
+make[3]: Entering directory `/w/home.24/class/classyho/CS35L/Lab9/diffutils-3.0-orig/tests'
+/bin/sh: /bin/sh: cannot execute binary file
+make[3]: *** [basic.log] Error 126
+make[3]: Leaving directory `/w/home.24/class/classyho/CS35L/Lab9/diffutils-3.0-orig/tests'
+make[2]: *** [check-TESTS] Error 2
+make[2]: Leaving directory `/w/home.24/class/classyho/CS35L/Lab9/diffutils-3.0-orig/tests'
+make[1]: *** [check-am] Error 2
+make[1]: Leaving directory `/w/home.24/class/classyho/CS35L/Lab9/diffutils-3.0-orig/tests'
+make: *** [check-recursive] Error 1
+
+After building, I tested the program by running the commands './src/diff . -' and
+'./src/diff --help'. The program works as expected and is correct as the messages displayed
+did not have the ` character.
+
+
+9. Verify that our ChangeLog entry works
+Command: git checkout quote
+Command: make distdir
+Command: cd diffutils-3.0.1-22d0
+Command: vim ChangeLog
+
+I first switched back to the branch that I was working on using 'git checkout quote' and
+then I ran 'make distdir'. After running the command and waiting for a while, the directory
+'diffutils-3.0.1-22d0' was created. I used vim to view the ChangeLog and the first entry in
+the file was the same as my ChangeLog entry, thus my ChangeLog entry works. The following is
+the entry found in the ChangeLog:
+
+2018-12-07  Ricky Ho  <classyho@lnxsrv10.seas.ucla.edu>
+
+        2018-12-07  Ricky Ho  <classyho@lnxsrv10.seas.ucla.edu>
+                *   maint: quote 'like this' or "like this", not `like this'
+
+                    This is in response to a recent change in the GNU coding standards,
+                    which now suggest quoting 'like this' or "like this", instead of
+                    `like this' or ``like this''.
+                    * src/cmp.c (try_help, specify_ignore_initial, usage, main):
+                    * src/diff.c (main, try_help, option_help_msgid, specify_value)
+                    (compare_files):
+                    * src/diff3.c (main, try_help, option_help_msgid, usage)
+                    (read_diff):
+                    * src/dir.c (compare_names):
+                    * src/sdiff.c (try_help, usage, check_child_status, main):
+                    * src/util.c (finish_output):
+                    Quote 'like this' in output.
+
+
+10. Run the command gitk on the GNU Emacs git repository's master branch on SEASnet in the
+    directory ~eggert/src/gnu/emacs.
+Command: ssh -X classyho@lnxsrv10.seas.ucla.edu
+Command: gitk ~eggert/src/gnu/emacs
+Command: cd ~eggert/src/gnu/emacs
+Command: gitk
+
+First, I exited the terminal to be able to re-log into the SEASnet server but with
+XForwarding enabled. I did this through the command ssh -X classyho@lnxsrv10.seas.ucla.edu.
+Then I tried to run the command 'gitk ~eggert/src/gnu/emacs' but I received a pop-up saying
+that no git could be found. I instead went directly into the directory using 'cd' and used
+the command 'gitk', which worked.
+
+After looking through the commits, I found that the newest merge that is not newer than 
+2015-01-25 was the commit "merge branch 'master' into xwidget". which was added on
+2015-01-25 12:19:27.
+
