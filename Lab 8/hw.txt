@@ -1,0 +1,42 @@
+CS35L Homework #8:
+
+Questions:
+
+1. Suppose the other teams really had been observing all the bytes going across the network. Is your
+   resulting network still secure? If so, explain why, and explain whether your answer would change if
+   (1) you assumed the other teams had also tapped your keyboards after you completed all client-
+   server setup and had thereby obtained your team's keystrokes during later operation, or
+   (2) you are booting off USB and you assume the other teams temporarily had physical control of the
+   USB. If not, explain any weaknesses of your team's setups, focusing on possible attacks by such 
+   outside observers.
+
+2. Explain why the gpg2 --verify command in the following instructions doesn't really verify that you
+   personally created the file in question. How would you go about fixing this problem?
+
+
+Solutions:
+1. Our resulting network is still secure because our communication will have been encrypted using the
+   public keys that we generated. The other teams will not be able to decrypt our messages unless they
+   have possession of our private keys, which only we have knowledge/possession of.
+   
+   1) My answer would not change as I believe our network would still be secure because they only have
+      our keystrokes AFTER we had already finished our client-server setup. This means that they do
+      not have possession of our private keys, nor will they be able to obtain our passphrases because
+      we have our ssh-agent that handles authentication, i.e. we do not have to enter our passphrases
+      to log in to each other's hosts.
+   2) If the other teams had physical control of our USB, then our network may NOT be secure depending
+      on the content and files stored in the USB. If our USB had our system files stored in it, then
+      the other teams will be able to locate and read our private key data which they can use to
+      decrypt my team's communication. 
+
+2. The command gpg2 --verify does not verify that we are the creators of the file in question. Rather,
+   it simply verifies whether the file and the detached signatures match or not. This creates a 
+   vulnerability if an attacker is able to recreate the detached signature and is able to obtain the
+   file, modify it, and send it back to us while impersonating a trusted server. The command will not
+   be able to tell that the file has been created from a different source, and will only verify the 
+   signature match, thus will give us a "Good signature".
+
+   In order to solve this problem, there would need to be some sort of verification of the file's 
+   source and sender. This can be done through our public keys as anyone would be able to access
+   it and the receiver would know they can verify with the right key. 
+

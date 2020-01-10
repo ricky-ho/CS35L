@@ -1,0 +1,178 @@
+CS35L Lab 8:
+
+1. Set-up BeagleBone and ssh into the board
+Command: sudo ssh root@192.168.7.2
+
+
+2. Connect the BeagleBone to a wifi connection.
+Commands: sudo connmanctl
+	  connmanctl> enable wifi
+	  connmanctl> scan wifi
+	  connmanctl> services
+	  connmanctl> agent on
+	  connmanctl> connect wifi_2cf7f106741c_55434c415f574542_managed_none
+	  connmanctl> quit 
+
+Because this lab was completed outside of the computer lab, my partner and I used
+his Android phone's hotspot.  
+
+
+3. Get our IP addresses
+Command: ifconfig 
+
+After running the command, we looked under the network interface called "wlan0"
+and found our IP address labeled as "inet addr".
+
+My IP Address: 192.168.43.13
+Duy's IP Address: 192.168.43.79
+
+
+4. Update the database of apt-get and install xauth and xvfb for X11 forwarding support
+Commands: sudo apt-get update
+	  sudo apt-get install xauth
+	  sudo apt-get install xvfb
+
+
+5. Enable X11 
+Commands: vim /etc/ssh/ssh_config
+	  vim /etc/ssh/sshd_config
+
+Using vim, we edited the two files: /etc/ssh/ssh_config and /etc/ssh/sshd_config
+to enable X11 forwarding by changing the line "X11Forwarding no" to "X11Forwarding yes".
+
+
+6. Install Firefox and OpenSSH
+Commands: sudo apt-get install firefox-esr-l10n-en-gb
+	  sudo apt-get install openssh-client
+	  sudo apt-get install openssh-server
+	  dpkg --get-selections | grep openssh
+
+After installing OpenSSH, I ran the command 'dpkg --get-selections | grep openssh' to verify
+that OpenSSH was successfully installed. I got the following output indicating OpenSSH is installed
+in the BeagleBone:
+openssh-client					install
+openssh-server					install
+
+
+7. First, I acted as the client and my partner Duy acted as the server. 
+Commands: ssh-keygen
+	  ssh-copy-id -i ricky@192.168.43.79
+	  ssh ricky@192.168.43.79
+
+I generated public and private keys using the command 'ssh-keygen' and saved the 
+passphrase as "qwer1234". Running the command gave the following output:
+
+Generating public/private rsa key pair.
+Enter file in which to save the key (/root/.ssh/id_rsa): 
+Created directory '/root/.ssh'.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /root/.ssh/id_rsa.
+Your public key has been saved in /root/.ssh/id_rsa.pub.
+The key fingerprint is:
+9a:cc:ae:bc:04:e6:7a:41:3a:f9:db:82:d0:6c:e9:f0 root@beaglebone
+The key's randomart image is:
++---[RSA 2048]----+
+|                 |
+|                 |
+|                 |
+|  .              |
+| *o.    S        |
+|*o*. o o         |
+|.O... =          |
+|..E+ .           |
+|...o=o.          |
++-----------------+
+
+Then I copied my public key to Duy's server for key-based authentication using the command
+'ssh-copy-id -i ricky@192.168.43.79'. It prompted me to enter the password that he set for me
+which was '123abc'. This gave me the following shell output:
+
+The authenticity of host '192.168.43.79 (192.168.43.79)' can't be established.
+ECDSA key fingerprint is 43:ab:52:da:be:e9:50:d7:8e:e3:a0:06:4a:18:4b:b2.
+Are you sure you want to continue connecting (yes/no)? yes
+/usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+/usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+Debian GNU/Linux 8
+
+BeagleBoard.org Debian Image 2016-06-14
+
+Support/FAQ: http://elinux.org/Beagleboard:BeagleBoneBlack_Debian
+
+default username:password is [debian:temppwd]
+
+ricky@192.168.43.79's password: 
+
+Number of key(s) added: 1
+
+Now try logging into the machine, with:   "ssh 'ricky@192.168.43.79'"
+and check to make sure that only the key(s) you wanted were added.
+
+For the last step, I logged into Duy's host by using the command 'ssh ricky@192.168.43.79'.
+From there we tried to run xterm, but realized that we both did not have it installed, which leads us
+to the next step.
+
+
+8. Download Xterm
+Commands: exit
+	  sudo apt-get install xterm
+
+I first logged out of Duy's host by using the command 'exit'. Now both of us install xterm using the
+command 'sudo apt-get install xterm'.
+ 
+
+9. Ssh with port forwarding without having to enter a passphrase
+Commands: eval `ssh-agent`
+	  ssh-add
+	  ssh -X ricky@192.168.43.79
+	  xterm
+	  firefox
+	  touch hello.txt
+
+After successfully logging into Duy's host and install xterm, our next task was to use ssh-agent from
+OpenSSH to handle the authentication so that I could log into his host without having to enter the
+passphrase. I did this by using the command 'eval `ssh-agent`' to set-up the agent. Then I used the 
+command 'ssh-add' to add my private key to the agent.
+
+Now, I can use ssh without having to enter my passphrase, and this time I also included port forwarding
+by using the '-X' option. After logging back onto Duy's host, I ran the command 'xterm' which opened
+a shell window. From that window, I ran the command 'firefox' and the Firefox browser appeared as we
+had expected. 
+
+As a final test, we decided to create a random text file to ensure that whatever changes I make, Duy
+can see it in the directory he made for me. I used the command 'touch hello.txt' to create a text file
+and as expected, Duy was able to see it in the /home/ricky directory he created for me. 
+
+
+10. Reverse roles, so I am now the server and Duy is the client. 
+Commands: sudo useradd -d /home/duy -m duy
+	  sudo passwd duy
+
+Now that I am the server, I had to create an account for Duy. I did this by using the command 'sudo 
+useradd -d /home/duy -m duy' and created a password for him using the command 'sudo passed duy'.
+
+
+11. Create a .ssh directory for Duy and change ownership and permissions 
+Commands: cd /home/duy
+	  sudo mkdir .ssh
+	  sudo chown -R duy .ssh
+	  sudo chmod 700 .ssh
+
+I first entered into the directory that I made for Duy using 'cd /home/duy'. Then I created a .ssh
+directory using 'sudo mkdir .ssh'. Finally, I changed the ownership and permissions so that Duy can
+log onto the server and make changes to the files/directories by using the commands 'sudo chown -R duy .ssh'
+and 'sudo chmod 700 .ssh'.
+
+
+12. Check whether ssh -X and ssh -Y differ in behavior when using port forwarding.
+Commands: ssh -X ricky@192.168.43.79
+	  ssh -Y ricky@192.168.43.79
+
+After reading about the ssh -X and ssh -Y from the link in the project spec, we learned that the
+-X and -Y options basically set a flag for ForwardX11 and ForwardX11Trusted, respectively, which 
+does essentially the same thing in terms of allowing us to run an X11 program on a remote machine.
+However, the only difference is that the -X option treats the remote machine that we are connecting
+to as an untrusted client and the -Y option treats the remote machine that we are connecting to as a
+trusted client, which creates many security vulnerabilities since this allows the X11 client to 
+make screenshots, keylog, or inject input.
+
