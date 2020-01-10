@@ -1,0 +1,80 @@
+CS35L Lab 6:
+
+1. Check that our version of the command 'sort' is a new-enough version.
+Command: /usr/local/cs/bin/sort --version
+
+We get the following output:
+sort (GNU coreutils) 8.30
+Copyright (C) 2018 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.
+
+Written by Mike Haertel and Paul Eggert.
+
+Based on this information, we see that we are using sort (GNU coreutils) 8.30, which
+should be a new-enough version.
+
+
+2. Generate a file that contains 2^24 random single-precision floating point numbers, in 
+   textual form, one per line with no white space.
+Command: man od
+Command: od -An -f -N $(((2**24)*4)) < /dev/urandom | tr -s ' ' '\n' | sed '/^$/d' > random.txt
+Command: wc -l random.txt
+
+I first used the command 'man od' to find the appropriate options for generating random
+single-precision floating point numbers. The -An option hides the memory addresses, the 
+-f option indicates floating point numbers, and the -N option lets us limit the amount of
+bytes we want to output. Since we need 2^24 floating points and each floating point is 
+4 bytes. We multiply 2^24 (which is equal to 16777216) by 4 to get 67108864 bytes, which
+is equivalent to the expression $(((2**24)*4)). 
+
+Now, we want to use the 'tr' and 'sed' command to modify this output so that there is
+one floating point per line with no white space. The command tr -s ' ' '\n' replaces 
+space characters with newline characters to get each floating point on its own line with 
+the -s option ignoring repeated space characters and limiting it to a single occurrence.
+The sed '/^$/d' command deletes all of the empty lines, and finally we can dump the output
+into the file random.txt.
+
+To make sure that random.txt has 16,777,216 floating points, I used the command 'wc -l' on
+random.txt to get the number of lines in the file. And as expected, the number of lines is
+correct.
+
+
+3. Time the command 'sort -g' on our random.txt file with 0, 1, 2, 4, and 8 threads
+   with the output sent to /dev/null and record the real, user, and system times.
+Command: export PATH=/usr/local/cs/bin
+Command: time -p sort -g random.txt > /dev/null
+Command: time -p sort -g --parallel=1 random.txt > /dev/null
+command: time -p sort -g --parallel=2 random.txt > /dev/null
+Command: time -p sort -g --parallel=4 random.txt > /dev/null
+Command: time -p sort -g --parallel=8 random.txt > /dev/null
+
+In order to use the correct version of sort, we set our path to /usr/local/cs/bin.
+using the command 'export PATH=/usr/local/cs/bin'
+
+a. time -p sort -g random.txt > /dev/null
+real 52.55
+user 173.24
+sys 1.43
+
+b. time -p sort -g --parallel=1 random.txt > /dev/null
+real 196.32
+user 173.55
+sys 0.89
+
+c. time -p sort -g --parallel=2 random.txt > /dev/null
+real 88.39
+user 167.58
+sys 0.35
+
+d. time -p sort -g --parallel=4 random.txt > /dev/null
+real 59.78
+user 168.88
+sys 0.46
+
+e. time -p sort -g --parallel=8 random.txt > /dev/null
+real 49.68
+user 168.77
+sys 0.60
+
