@@ -1,0 +1,155 @@
+CS35L Lab 2
+
+1. Setting locale
+export LC_ALL='C'
+
+2. Create file 'word' with sorted list of English words
+sort /usr/share/dict/words -o words
+
+3. Get a text file containing the HTML in this assignment's web page
+wget http://web.cs.ucla.edu/classes/fall18/cs35L/assign/assign2.html
+
+4. Run the following commands
+a. tr -c 'A-Za-z' '[\n*]' < assign2.html
+   This command will output all alphabetical characters (A-Z and a-z) and will
+   replace each non-alphabetical character with a newline because the -c 
+   option is looking for the complement of 'A-Za-z'.
+
+b. tr -cs 'A-Za-z' '[\n*]' < assign2.html
+   This command will output all alphabetical characters (A-Z and a-z) and 
+   similar to the previous command, will replace the non-alphabetical 
+   characters with newlines, except it will only display one new line instead
+   of multiple consecutive newlines.
+
+c. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort
+   This command will output all alphabetical characters sorted based on their
+   ASCII values. The only difference from the previous command is that this 
+   output gets sorted, thus making it easier to see how many times a word is 
+   repeated.
+
+d. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u
+   This command will output all alphabetical characters sorted based on their
+   ASCII values and will only display one occurrence of each unique word 
+   because the -u option for sort will output only the first of an equal run.
+
+e. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm - words
+   This command will compare the sorted assign2.html output with words. It 
+   will output three columns in which column 1 displays lines unique to the 
+   sorted assign2.html, column 2 displays lines unique to the file 'words',
+   and column 3 will display lines that are common to both files. 
+
+f. tr -cs 'A-Za-z' '[\n*]' < assign2.html | sort -u | comm -23 - words
+   This command is similar to the previous command except that in its output
+   it will only display column 1 which only displays lines unique to the 
+   sorted assign2.html.
+
+5. Get the "English to Hawaiian" web page
+wget http://mauimapp.com/moolelo/hwnwdseng.htm
+
+
+#!/bin/bash
+
+6. Remove everything before the first Hawaiian word
+sed '/<!DOCTYPE/,/Adopt<\/td>/d' 
+
+7. Remove everything after the end of English and Hawaiian words
+sed '/<\/table>/, /<\/html>/d' 
+
+8. Remove all english words
+sed '/<tr>/, /<\/td>/d' 
+
+9. Remove the </tr> tags
+sed '/<\/tr>/d'
+
+10. Remove the remaining tags
+sed '/<td><\/td>/d' | sed 's/<[^>]*>//g'
+
+11. Convert all uppercase letters to lowercase
+tr '[:upper:]' '[:lower:]' |
+
+12. Convert ASCII grave accent to ASCII apostrophe
+sed 's/`/'\''/g' 
+
+13. Treat all expressions with commas/spaces as multiple words
+sed 's/, /\n/g' | sed 's/ /\n/g'  
+
+14. Delete any non-Hawaiian words by looking for non-Hawaiian letters
+sed "s/.*[^pk'mnwlhaeiou].*//"  
+
+15. Delete any left-over spaces and empty lines
+tr -d '[:blank:]' | sed '/^$/d' 
+
+16. Sort the resulting list of words and remove duplicates
+sort -u
+
+17. Create a file called buildwords and pipeline commands 6 through 16
+vim buildwords
+
+18. Make the buildwords script executable
+chmod +x buildwords
+
+19. Create the Hawaiian dictionary called hwords
+cat hwnwdseng.htm | ./buildwords > hwords
+
+20. Spellchecking 
+a. Misspelled Hawaiian on webpage
+   cat assign2.html | tr -cs "pk\'mnwlhaeiou" '[\n*]' |
+   tr '[:upper:]' '[:lower:]' | 
+   sort -u | comm -23 - hwords > misspelledHwn
+   
+   wc -w misspelledHwn 
+   There are 199 misspelled Hawaiian words.
+
+b. Misspelled English on webpage
+   cat assign2.html | tr -cs 'A-Za-z' '[\n*]' |
+   tr '[:upper:]' '[:lower:]' | 
+   sort -u | comm -23 - words > misspelledEng
+
+   wc -w misspelledEng
+   There are 38 misspelled English words. 
+
+c. "Misspelled" as English but not Hawaiian
+   cat misspelledEng | tr -cs "pk\'mnwlhaeiou" '[\n*]' | sort -u |
+   comm -12 - hwords > misspelledEng2Hwn
+
+   wc -w misspelledEng2Hwn 
+   There are 6 words "misspelled" as English but not as Hawaiian.
+   
+   Example: 
+   e
+   halau
+   i
+   lau
+   po
+   wiki
+
+d. "Misspelled" as Hawaiian but not English
+   cat misspelledHwn | tr -cs 'A-Za-z' '[\n*]' | sort -u |
+   comm -12 - words > misspelledHwn2Eng
+
+   wc -w misspelledHwn2Eng
+   There are 109 words "misspelled" as Hawaiian but not as English.
+
+   Example: 
+   a
+   ail
+   ain
+   ake
+   al
+   ale
+   alen
+   all
+   amine
+   amp
+   ample
+   an
+   aph
+   aul
+   awk
+   e
+   ea
+   ee
+   el
+   em
+   emp
+

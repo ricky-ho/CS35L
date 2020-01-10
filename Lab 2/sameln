@@ -1,0 +1,64 @@
+#Homework #2
+
+D=$1
+HFILES=`ls -A $D | grep '^\.' | sort`
+FILES=`ls $D | sort`
+IFS=$'\n'
+declare -a ARR
+let count=0
+
+
+# Loop through all of the files in the directory and add regular hidden files
+# into ARR
+for FILE in $HFILES
+do
+	# If the hfile is a symlink or directory, move onto the next file
+        if [ -L "$D/$FILE" ] || [ -d "$D/$FILE" ]
+        then	continue
+        
+	# If the hfile does not have read permission, report the error
+        elif [ -f "$D/$FILE" ] && [ ! -r "$D/$FILE" ]
+        then
+                echo "$FILE does not have reading permission!"
+        
+	# Otherwise, the hfile is a reg file, so add it into ARR
+        else
+		ARR[$count]="$D/$FILE"
+		(( count=count+1 ))	
+	fi
+done
+
+# Loop through all of the files again and add regular files into ARR
+for FILE in $FILES
+do 
+	# If the file is a symlink or directory, move onto the next file
+	if [ -L "$D/$FILE" ] || [ -d "$D/$FILE" ]
+	then	continue
+
+	# If the file does not have read permission, report the error
+	elif [ -f "$D/$FILE" ] && [ ! -r "$D/$FILE" ]
+	then
+		echo "$FILE does not have reading permission!"
+
+	# Otherwise, the file is a reg file, so add it into ARR
+	else
+		ARR[$count]="$D/$FILE"
+		(( count=count+1 ))
+	fi
+done
+
+# Now loop through ARR and compare each element with each other and hardlink
+# duplicates
+for (( x=0; x<$count; x++ ))
+do
+	for (( y=$x+1; y<$count; y++ ))
+	do
+		# Compare each file with each other
+		cmp -s "${ARR[$x]}" "${ARR[$y]}"
+		# 0 means the files matched and are duplicates
+		if [ $? -eq 0 ]
+		then
+			ln -f "${ARR[$x]}" "${ARR[$y]}"
+		fi	
+	done
+done

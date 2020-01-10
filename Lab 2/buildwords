@@ -1,0 +1,16 @@
+#!/bin/bash
+
+sed '/<!DOCTYPE/,/Adopt<\/td>/d' | 
+sed '/<\/table>/, /<\/html>/d' | 
+sed '/<tr>/, /<\/td>/d' | 
+sed '/<\/tr>/d' | 
+sed '/<td><\/td>/d' | 
+sed 's/<[^>]*>//g' | 
+tr '[:upper:]' '[:lower:]' | 
+sed 's/`/'\''/g' | 
+sed 's/, /\n/g' | 
+sed 's/ /\n/g' | 
+sed "s/.*[^pk'mnwlhaeiou].*//" | 
+tr -d '[:blank:]' | 
+sed '/^$/d' | 
+sort -u
