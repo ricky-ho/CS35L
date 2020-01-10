@@ -1,0 +1,219 @@
+CS35L Lab 5: 
+
+---- lab.txt portion ----
+
+1. Write the C program tr2b.c. tr2b.c uses getchar and putchar to transliterate bytes.
+
+
+2. Write the C program tr2u.c. tr2u.c uses read and write to transliterate bytes instead
+   of using getchar and putchar. The nbyte argument to read and write should be 1, so
+   that the program operates similar to tr2b.c which reads in single bytes at a time.
+
+
+3. Compile both programs.
+Command: gcc -std=c11 tr2b.c -o tr2b
+Command: gcc -std=c11 tr2u.c -o tr2u
+
+There was no error with the compilation, thus these two commands produce no output.
+These commands produce two executables named tr2b and tr2u which we can then run by
+using ./tr2b and ./tr2u . 
+
+
+4. Create a file that contains at least 5,000,000 bytes (5 MB).
+Command: head --bytes=5000000 /dev/urandom > output.txt
+Command: ls -l
+
+After creating the file, I used the command 'ls -l' to ensure that the file output.txt
+was created and contains 5,000,000 bytes.
+
+
+5. Use the strace command to compare the system calls issued by tr2b and tr2u
+a) when copying one file to another and,
+Command: strace -c ./tr2b 'a\n-' 'z@m+' < output.txt > tr2b_out
+Command: strace -c ./tr2u 'a\n-' 'z@m+' < output.txt > tr2u_out
+
+The following output is shown: 
+
+$ strace -c ./tr2b 'a\n-' 'z@m+' < output.txt > tr2b_out
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 61.77    0.001483           2       611           write
+ 27.82    0.000668           1       613           read
+  4.25    0.000102          11         9           mmap
+  1.67    0.000040          20         2           open
+  1.37    0.000033           8         4           mprotect
+  0.71    0.000017           4         4           fstat
+  0.67    0.000016          16         1         1 access
+  0.58    0.000014           7         2           close
+  0.54    0.000013          13         1           execve
+  0.33    0.000008           8         1           brk
+  0.29    0.000007           7         1           arch_prctl
+  0.00    0.000000           0         1           munmap
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.002401                  1250         1 total
+
+$ strace -c ./tr2u 'a\n-' 'z@m+' < output.txt > tr2u_out
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 57.40   52.226867          10   5000000           write
+ 42.60   38.767240           8   5000002           read
+  0.00    0.000081          12         7           mmap
+  0.00    0.000069          17         4           mprotect
+  0.00    0.000034          17         2           open
+  0.00    0.000021          21         1           munmap
+  0.00    0.000020          20         1         1 access
+  0.00    0.000016          16         1           execve
+  0.00    0.000014           7         2           fstat
+  0.00    0.000013           7         2           close
+  0.00    0.000010          10         1           brk
+  0.00    0.000007           7         1           arch_prctl
+------ ----------- ----------- --------- --------- ----------------
+100.00   90.994392              10000024         1 total
+
+b) when copying a file to your terminal
+Command: strace -c ./tr2b 'a\n-' 'z@m+' < output.txt
+Command: strace -c ./tr2u 'a\n-' 'z@m+' < output.txt
+
+The following output is shown:
+
+$ strace -c ./tr2b 'a\n-' 'z@m+' < output.txt
+%time      seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 87.22    0.018331           4      4883           write
+ 11.17    0.002348           4       613           read
+  0.72    0.000152          17         9           mmap
+  0.21    0.000045          11         4           mprotect
+  0.21    0.000044          22         2           open
+  0.10    0.000022           6         4           fstat
+  0.10    0.000022          22         1         1 access
+  0.08    0.000016           8         2           close
+  0.07    0.000015          15         1           arch_prctl
+  0.07    0.000014          14         1           execve
+  0.03    0.000007           7         1           brk
+  0.00    0.000000           0         1           munmap
+------ ----------- ----------- --------- --------- ----------------
+100.00    0.021016                  5522         1 total
+
+$ strace -c ./tr2u 'a\n-' 'z@m+' < output.txt
+%time      seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 55.94   48.558906          10   5000000           write
+ 44.06   38.247759           8   5000002           read
+  0.00    0.000223          32         7           mmap
+  0.00    0.000147          37         4           mprotect
+  0.00    0.000106          53         2           open
+  0.00    0.000036          36         1           munmap
+  0.00    0.000029          15         2           fstat
+  0.00    0.000028          14         2           close
+  0.00    0.000015          15         1           arch_prctl
+  0.00    0.000000           0         1           brk
+  0.00    0.000000           0         1         1 access
+  0.00    0.000000           0         1           execve
+------ ----------- ----------- --------- --------- ----------------
+100.00   86.807249              10000024         1 total
+
+In both situations, the buffered versions have significantly fewer system calls than
+the unbuffered versions. 
+
+
+6. Use the time command to measure how much faster one program is, compared to the
+   other, when copying the same amount of data
+Command: time ./tr2b 'a\n-' 'z@m+' < output.txt > tr2b_out
+Command: time ./tr2u 'a\n-' 'z@m+' < output.txt > tr2u_out
+Command: time ./tr2b 'a\n-' 'z@m+' < output.txt
+Command: time ./tr2u 'a\n-' 'z@m+' < output.txt
+$ time ./tr2b 'a\n-' 'z@m+' < output.txt > tr2b_out
+real	0m0.566s
+user	0m0.458s
+sys	0m0.039s
+
+$ time ./tr2u 'a\n-' 'z@m+' < output.txt > tr2u_out
+real	0m17.596s
+user	0m1.904s
+sys	0m15.586s
+
+$ time ./tr2b 'a\n-' 'z@m+' < output.txt
+real	0m0.624s
+user	0m0.520s
+sys	0m0.071s
+
+$ time ./tr2u 'a\n-' 'z@m+' < output.txt
+real	0m15.073s
+user	0m1.910s
+sys	0m13.055s
+
+Clearly, the buffered version is much faster than the unbuffered version. This is 
+expected and could have been inferred without the 'time' command because the buffered
+version has significantly less system calls than the unbuffered version. 
+
+-----------------------------------------------------------------------------------------
+Sfrob and Sfrobu Comparison:
+
+1. Rewrite sfrob as sfrobu with an added feature of the '-f' option which ignores
+casing and uses read() and write() system calls instead of getchar() and putchar().
+
+
+2. Compare the performance of sfrob and sfrobu using 'time' command on inputs of 
+varying numbers of input lines, and estimate the number of comparisons as a function
+of the number of input lines.
+Command: time ./sfrob < test[#].txt
+Command: time ./sfrobu < test[#].txt
+
+I first created three test files containing 1000, 10000, and 100000 lines, respectively.
+The number of comparisons performed by sfrob and sfrobu were examined under gdb and are:
+# of Lines | # of Comparisons
+1000       | 39,369 
+10000      | 509,569
+100000     | 6,256,292
+
+The output of the time commands are shown below:
+        |      test1      |      test2       |     test3       |
+./sfrob | real	0m0.013s  | real  0m0.105s   | real  0m1.143s  |
+        | user	0m0.005s  | user  0m0.074s   | user  0m0.827s  |
+        | sys	0m0.006s  | sys   0m0.024s   | sys   0m0.281s  |
+----------------------------------------------------------------
+./sfrobu| real  0m0.067s  | real  0m0.589s   | real  0m6.080s  |
+        | user  0m0.010s  | user  0m0.097s   | user  0m1.086s  |
+        | sys   0m0.055s  | sys   0m0.483s   | sys   0m4.938s  |
+
+Clearly, the unbuffered version (sfrobu.c) is significantly slower than the buffered
+verion (sfrob.c). sfrob runs about 6x faster than sfrobu. 
+The number of comparisons as a linear function of the number of input lines can be
+estimated to be f(x) = 74.61276x - 468635.3 , where x is the number of lines.
+
+
+3. Use the 'time' command to compare the overall performances of sfrob, sfrobu, 
+sfrobs, sfrobu -f,and sfrobs -f.
+Command: time ./sfrob < test[#].txt
+Command: time ./sfrobu < test[#].txt
+Command: time ./sfrobs < test[#].txt
+Command: time ./sfrobu -f < test[#].txt
+Command: time ./sfrobs -f < test[#].txt
+
+           |      test1      |      test2       |     test3       |
+./sfrob    | real  0m0.013s  | real  0m0.105s   | real  0m1.143s  |
+           | user  0m0.005s  | user  0m0.074s   | user  0m0.827s  |
+           | sys   0m0.006s  | sys   0m0.024s   | sys   0m0.281s  |
+-------------------------------------------------------------------
+./sfrobu   | real  0m0.067s  | real  0m0.589s   | real  0m6.080s  |
+           | user  0m0.010s  | user  0m0.097s   | user  0m1.086s  |
+           | sys   0m0.055s  | sys   0m0.483s   | sys   0m4.938s  |
+-------------------------------------------------------------------
+./sfrobs   | real  0m0.020s  | real  0m0.050s   | real  0m0.470s  |
+           | user  0m0.008s  | user  0m0.026s   | user  0m0.303s  |
+           | sys   0m0.013s  | sys   0m0.028s   | sys   0m0.159s  |
+-------------------------------------------------------------------
+./sfrobu -f| real  0m0.066s  | real  0m0.623s   | real  0m6.281s  |
+           | user  0m0.015s  | user  0m0.119s   | user  0m1.330s  |
+           | sys   0m0.049s  | sys   0m0.498s   | sys   0m4.888s  |
+-------------------------------------------------------------------
+./sfrobs -f| real  0m0.019s  | real  0m0.064s   | real  0m0.680s  |
+           | user  0m0.010s  | user  0m0.040s   | user  0m0.492s  |
+           | sys   0m0.013s  | sys   0m0.030s   | sys   0m0.153s  |
+-------------------------------------------------------------------
+
+Based on the information by running the time command, the shell script version (sfrobs)
+outperformed both the buffered (sfrob) and unbuffered (sfrobu) versions. This is as 
+expected because the shell script uses the tr and sort commands that were developed
+by corporations who develop and optimized tools for a living. 
+
