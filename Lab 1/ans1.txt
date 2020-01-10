@@ -1,0 +1,97 @@
+1. man -K <keywords> 
+   I found the command by reading through "man man".
+
+2. The mv program is located in /usr/local/cs/bin/mv.
+   The sh program is located in /usr/bin/sh.
+   I used the command "whereis mv" and "whereis sh".
+
+3.
+   ar - creates, modifies, and extracts from archives. 
+   pr - converts text files for printing. 
+   tr - translates or deletes characters.
+   I first used "echo $PATH" to identify all directories.
+   Then I used "find <directory> -name '?r' -executable" on each directory.
+   This gave me the results: ar, pr, and tr. Then I used "man ar, man pr, man tr" 
+   to figure out what they do.
+
+4. The file /etc/alternatives/emacs is executed.
+   I typed /usr,/bin, and /usr/bin, in which the shell prompted that they were
+   directories. Then when I typed /usr/bin/emacs, it executed the emacs program,
+   which meant that this was a symbolic link. Then I used "man -k symbolic" and
+   found the command "readlink" and used "readlink /usr/bin/emacs" to get the answer. 
+5. /usr/bin/gcc - version 4.8.5 and gcc - version 8.2.0
+   They are different programs because the newer version (8.2.0) has newer 
+   features and newer implementations. I used "man -k gcc" and found that adding
+   "--version" would give its version info.
+   Thus the command "gcc --version" and "/usr/bin/gcc --version" provided the answer.
+ 
+6. u+sx sets user ID upon execution and gives users execute permission.
+   o-w removes the permission to write for others. 
+   I used "man chmod" to find information on permissions. 
+
+7. find /usr/local/cs -type d -mtime -28
+   I used the command "man find" to help answer this question.
+
+8. 290
+   I used "man find" to determine the type for symbolic links. Then I used
+   "whereis find" to determine the directory where find is located. There were 
+   too many symbolic links so I used "man -k number of lines" to find a command to
+   display the number of lines, i.e. the number of symbolic links
+   ("find /usr/bin -type l | nl")
+
+9. librom1394.so.0.3.0
+   I was first reading through the manual page for find but could not find anything. 
+   Then I decided to go directly into the /usr/lib64 directory using "cd /usr/lib64"    and used "ls" to see what files were in the directory. I used "man ls" and found 
+   that "ls -lt" would list all the files in order of newest to oldest modified time
+   thus the last file was librom1394.so.0.3.0. 
+
+10. The locale command gets its data from localedef.
+    I looked through "man locale" to figure out locale's function. The manual said
+    that locale displays the current locale settings based on the settings of the 
+    environment variables that control the locale. From this I decided to use
+    "man -k locale" and found "localedef" which states that it defines the locale 
+    environment.  
+
+11. 
+    downcase-dwim    M-x ... Ret
+    downcase-region  C-x C-l
+    downcase-word    M-l
+    I entered into emacs and looked through the manual and found the command "C-h a"
+    which allowed me to search through the manuals for a keyword.
+
+12. 
+    'C-M-s'
+       Begin incremental regexp search ('isearch-forward-regexp').
+
+    'C-M-r'
+       Begin reverse incremental regexp search ('isearch-backward-regexp').
+
+    'C-M-t' ('transpose-sexps') switches the positions of the previous
+       balanced expression and the next one.  It is analogous to the 'C-t'
+       command, which transposes characters.
+
+    'C-M-u'
+       Runs the command backward-up-list, which is an interactive
+       compiled Lisp function. It moves backward up past one unmatched
+       opening delimiter.  A positive argument serves as a repeat count; a
+       negative argument reverses the direction of motion, so that the command
+       moves forward and up one or more levels.
+
+    'C-M-v'
+       Scroll the next window ('scroll-other-window').
+    I looked through the Emacs Manual under Key Index.
+
+13. 'C-g' cancels a command before it has finished and is the way to get rid
+    of a partially typed command, or a numeric argument that you don't want.  
+    I looked through the Emacs Manual under Command Index.
+
+14. 'yank' is bound to 'C-y' and it basically reinserts ("paste") the last
+    stretch of killed text. More precisely, it reinserts the most recent kill.
+    I searched through the Emacs Manual and used 'C-s' to search for the word 'yank'
+
+15. The difference between "ls -l" in the shell and "dired" in emacs was that dired
+    also displayed the current directory and parent directory in its list of files.  
+    I used the command "cd /usr/bin" and "ls -l" to view the contents in the /usr/bin
+    directory with their permissions. In emacs, I used 'C-x d' and entered in
+    "/usr/bin" to display the contents. 
+
