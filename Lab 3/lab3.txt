@@ -1,0 +1,121 @@
+CS35L Lab 3:
+
+1. Download the Coreutils-8.29, signature, and GNU keyring files 
+Command: wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz
+Command: wget ftp://ftp.gnu.org/gnu/coreutils/coreutils-8.29.tar.xz.sig
+Command: wget https://ftp.gnu.org/gnu/gnu-keyring.gpg
+
+2. Verify the signature with the GNU keyring
+Command: gpg --verify --keyring ./gnu-keyring.gpg coreutils-8.29.tar.xz.sig
+There were no problems with this verification. However, there was a warning 
+that said "This key is not certified with a trusted signature! There is no 
+indication that the signature belongs to the owner." I think this warning 
+comes from the fact that we are all using this same exact key i.e. it is for
+public use thus giving us the warning.
+
+3. Untar and unzip the Coreutils file 
+Command: tar -xf coreutils-8.29.tar.xz
+The -xf options for tar basically extracts all files from the archive.tar 
+
+4. Go into the Coreutils-8.29 directory
+Command: cd coreutils-8.29
+
+5. Make our own temporary directory to install coreutils into
+Command: mkdir coreutilsInstall
+
+6. Compile and install coreutils into our own temporary directory
+Command: vim INSTALL     then press '/' and search for prefix
+Command: pwd
+Command: ./configure --prefix=/u/eng/class/classyho/CS35L/Lab3/coreutils-8.29/
+	 coreutilsInstall
+Command: make
+Command: make install
+I searched through the INSTALLS text file and searched for prefix to figure out
+how to install coreutils into our own temporary directory. This is done through
+the ./configure --prefix=<absolute_file_name> command. In order to get the 
+absolute file name, I used the command 'pwd' and copied it into the configure
+script. Once the configuration script has finished, we can simply use the
+commands 'make' and 'make install' to compile and install coreutils into our
+temporary directory (coreutilsInstall).
+
+7. Reproduce the bug on our machine with the unmodified version of coreutils
+Command: cd coreutilsInstall/bin
+Command: ./ls -aA
+In order to reproduce the error, we have to go into the coreutilsInstall 
+directory and into its bin directory. Then we run the command ./ls -aA 
+which showed the directories . and .. which is the bug because the -A is 
+supposed to override the -a.
+
+8. Create a patch file for the bug
+Command: cd ../..    to go back to the coreutils-8.29 directory
+Command: vim patch.diff
+Next, I went back to the coreutils-8.29 directory and created a file called 
+patch.diff using vim. Then I copy and pasted the patch provided by the professor
+in Bug#30963 Message#10.
+
+9. Apply the patch
+Command: man patch
+Command: patch -p1 < patch.diff
+I looked through the manual page for patch to find out what the -pnum options
+were. Since the patch had paths beginning with 'a/' (for example, a/src/ls.c),
+I needed to get rid of the 'a/' to get src/ls.c . From the man page, I figured
+out that the option must be -p1. 
+
+10. Recompile/build the patched files
+Command: make
+Command: man autoreconf
+Command: autoreconf -f -i
+Command: make
+After applying the patch, we have to recompile the files in order to see the 
+effects, thus I used the command 'make'. However, while the files were
+compiling, I suddenly got a warning saying that I was missing Automake-1.15.
+I was stuck on figuring out how to resolve this warning so I asked my TA, and
+they told me to look at the command 'autoreconf'. After reading through the 
+manual page, I figured out that I had to use the -f and -i option, thus I used
+'autoreconf -f -i' to resolve the Automake-1.15 warning. After that, I was able
+to recompile the files using 'make'. This time, I did not use 'make install' 
+after make because the Lab spec told us to build but not install the fixed 
+version of coreutils.
+
+11. Test that the modified ls works while the unmodified ls does not work.
+Command: coreutilsInstall/bin/ls -aA
+Command: coreutilsInstall/bin/ls -Aa
+Command: src/ls -aA
+Command: src/ls -Aa
+We are currently still in the coreutils-8.29 directory, thus in order to check
+the unmodified ls command, I typed 'coreutilsInstall/bin/ls -aA' and as 
+expected, it still displayed the . and .. directories. I also typed 
+'coreutilsInstall/bin/ls -Aa' to make sure the . and .. directories were 
+displayed. Now, to check the modified ls, I used the command 'src/ls -aA' and
+as expected, the . and .. directories were NOT displayed as a result of the
+patch. To ensure that there was no bug in the -a and -A options, I also used
+the command 'src/ls -Aa' and as expected, the . and .. directories were 
+displayed since the -a overrode the -A.
+
+Output of Unmodified ls command:
+[classyho@lnxsrv10 ~/CS35L/Lab3/coreutils-8.29]$ coreutilsInstall/bin/ls -aA
+.		ChangeLog	  GNUmakefile  man		 THANKS
+..		config.log	  init.cfg     NEWS		 thanks-gen
+ABOUT-NLS	config.status	  INSTALL      NEWS.orig	 THANKS.in
+aclocal.m4	configure	  lib	       NEWS.rej		 THANKS-to-tran
+AUTHORS		configure.ac	  m4	       po		 THANKStt.in
+autom4te.cache	COPYING		  .mailmap     .prev-version	 .timestamp
+bootstrap	coreutilsInstall  maint.mk     README		 TODO
+bootstrap.conf	dist-check.mk	  Makefile     src		 .version
+build-aux	doc		  Makefile.am  .tarball-version  .vg-suppressio
+cfg.mk		gnulib-tests	  Makefile.in  tests
+
+
+Output of Modified ls command:
+[classyho@lnxsrv10 ~/CS35L/Lab3/coreutils-8.29]$ src/ls -aA
+ABOUT-NLS	config.status	  INSTALL      NEWS.orig	 THANKS.in
+aclocal.m4	configure	  lib	       NEWS.rej		 THANKS-to-tran
+AUTHORS		configure.ac	  m4	       po		 THANKStt.in
+autom4te.cache	COPYING		  .mailmap     .prev-version	 .timestamp
+bootstrap	coreutilsInstall  maint.mk     README		 TODO
+bootstrap.conf	dist-check.mk	  Makefile     src		 .version
+build-aux	doc		  Makefile.am  .tarball-version  .vg-suppressio
+cfg.mk		gnulib-tests	  Makefile.in  tests
+ChangeLog	GNUmakefile	  man	       THANKS
+config.log	init.cfg	  NEWS	       thanks-gen
+

@@ -1,0 +1,48 @@
+CS35L Homework #3:
+
+Q1. I believe that the patch did NOT make the performance worse, hence I 
+believe that it actually improved the performance because the patch that
+we applied was fairly small and it simply added an extra test case script
+(tests/ls/a-option.sh) and removed an if-statement in the src/ls.c file. 
+These changes in general are not big enough to have any drastic 
+performance effects. Therefore, it did not make performance worse and
+because a bug was fixed, I believe this can technically mean that it
+"improved" performance. 
+
+Q2. There should not be any problems introduced by our new version of 
+Coreutils since it did not significantly modify any source code except 
+for the a-option. 
+
+Q3. If this script is invoked on an empty file with the option argument
+as 0, then the script will run successfully and output nothing. However,
+if the option argument is any number greater than 0, then we will get 
+this display:
+
+Traceback (most recent call last):
+  File "./randline.py", line 70, in <module>
+    main()
+  File "./randline.py", line 64, in main
+    sys.stdout.write(generator.chooseline())
+  File "./randline.py", line 34, in chooseline
+    return random.choice(self.lines)
+  File "/usr/lib64/python2.7/random.py", line 274, in choice
+    return seq[int(self.random() * len(seq))]  # raises IndexError if
+					       # seq is empty
+IndexError: list index out of range
+
+This error occurs because the script is expecting some sort of input 
+when the function chooseline() is called, but because the file is empty
+i.e seq is empty, this raises the IndexError that we see. 
+
+Q4. When this script is invoked with Python 3, we always get the
+following error message:
+
+  File "randline.py", line 65
+    except IOError as (errno, strerror):
+                      ^
+SyntaxError: invalid syntax
+
+This error occurs because Python3 changed its error handling syntax 
+slightly in which the current syntax "except IOError as (errno,strerr):" 
+should be written as "except IOError as errno:".
+
