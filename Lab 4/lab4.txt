@@ -1,0 +1,175 @@
+CS35L Lab 4:
+
+1. Download the buggy coreutils file 
+Command: wget http://web.cs.ucla.edu/classes/fall18/cs35L/assign/
+	 coreutils-with-bug.tar.gz
+
+
+2. Unzip the file and cd into the created directory (coreutils-with-bug)
+Command: tar -xvf coreutils-with-bug.tar.gz
+Command: cd coreutils-with-bug
+
+
+3. Make a temporary directory to install the package files
+Command: mkdir coreutilsInstall
+Command: cd coreutilsInstall
+Command: pwd 
+
+I cd into the coreutilsInstall directory and use the command 'pwd' to get the absolute
+path into this directory for when I configure. 
+
+
+4. Configure, make, and install the package files into the temporary directory
+Command: cd ..
+Command: ./configure --prefix=/u/eng/class/classyho/CS35L/Lab4/coreutils-with-bug/
+	 coreutilsInstall
+Command: make
+
+I go back to the coreutils-with-bug directory and configure with the prefix. Once 
+configuration is finished, I use the command 'make' to build the files. However, 
+while building I get the following error message:
+
+In file included from utimecmp.c:41:0:
+utimens.h:2:5: error: conflicting types for 'futimens'
+ int futimens (int, char const *, struct timespec const [2]);
+     ^
+In file included from utimecmp.h:25:0,
+                 from utimecmp.c:25:
+/usr/include/sys/stat.h:373:12: note: previous declaration of 'futimens' was here
+ extern int futimens (int __fd, const struct timespec __times[2]) __THROW;
+            ^
+make[3]: *** [utimecmp.o] Error 1
+make[3]: Leaving directory `/w/home.24/class/classyho/CS35L/Lab4/coreutils-with-bug/lib'
+make[2]: *** [all] Error 2
+make[2]: Leaving directory `/w/home.24/class/classyho/CS35L/Lab4/coreutils-with-bug/lib'
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory `/w/home.24/class/classyho/CS35L/Lab4/coreutils-with-bug'
+make: *** [all] Error 2
+
+This error is most likely occurring because there are two different definitions of
+futimens. Thus we will have to apply the renaming patch provided by the professor.
+
+
+5. Download the renaming patch, apply it, and then continue to build and install
+Command: wget http://web.cs.ucla.edu/classes/fall18/cs35L/assign/coreutils.diff
+Command: patch -p0 < coreutils.diff
+Command: make
+Command: make install
+
+We use the option -p0 because we do not need to strip any prefixes from the file names
+in the patch file. While patching, we get the following output: 
+
+patching file lib/utimens.c
+patching file lib/utimens.h
+patching file src/copy.c
+patching file src/tee.c
+patching file src/touch.c
+
+Once the patch is applied, we can build and install using 'make' and 'make install'.
+The renaming patch was able to fix the error by renaming the other definition of 
+futimens to coreutils_futimens and changing the calls to it. 
+
+
+6. Reproduce the problem by following the instructions in the spec
+Command: tmp=$(mktemp -d)
+Command: cd $tmp
+Command: touch -d '1918-11-11 11:00 GMT' wwi-armistice
+Command: touch now
+Command: sleep 1
+Command: touch now1
+Command: TZ=UTC0 /u/eng/class/classyho/CS35L/Lab4/coreutils-with-bug/
+	 coreutilsInstall/bin/ls -lt --full-time wwi-armistice now now1
+
+We use the buggy ls rather than the built-in ls by using the absolute path
+/u/eng/class/classyho/CS35L/Lab4/coreutils-with-bug/coreutilsInstall/ls -lt and
+get the following output: 
+-rw-r--r-- 1 classyho class 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+-rw-r--r-- 1 classyho class 0 2018-11-03 04:50:01.163704655 +0000 now1
+-rw-r--r-- 1 classyho class 0 2018-11-03 04:49:55.119485806 +0000 now
+
+The error in this buggy ls is that the 1918 wwi-armistice file is being treated as
+the most recent file hence it is the first file in the output, but it should be last
+because it is the oldest file, i.e. the output should have been the following: 
+
+-rw-r--r-- 1 classyho class 0 2018-11-03 04:50:01.163704655 +0000 now1
+-rw-r--r-- 1 classyho class 0 2018-11-03 04:49:55.119485806 +0000 now
+-rw-r--r-- 1 classyho class 0 1918-11-11 11:00:00.000000000 +0000 wwi-armistice
+
+
+7. Use a debugger to figure out what went wrong
+Command: gdb ~/CS35L/Lab4/coreutils-with-bug/coreutilsInstall/bin/ls
+Command: (gdb) info functions
+Command: (gdb) b compare_[m/a/c]time	# three separate commands
+Command: (gdB) run -lt wwi-armistice now now1
+Command: (gdb) s
+Command: (gdb) l
+Command: (gdb) p diff
+
+I use gdb to debug the buggy ls file. I first used 'info functions' to identify
+which functions to start looking at. Since the bug is related to the modification
+time of wwi-armistice being too old, I identified the compare_mtime, compare_atime,
+and compare_ctime functions to look at. Then I set a breakpoint at each of these
+three functions since I was not sure which one would be called. Then I run the
+program and it breaks at compare_mtime. I then step into the function and use the
+gdb command 'l' to see what the function implementation looks like. It takes me 
+into a function called timespec_cmp in which the following is listed:
+
+43	/* Return negative, zero, positive if A < B, A == B, A > B, respectively.
+44	   Assume the nanosecond components are in range, or close to it.  */
+45	static inline int
+46	timespec_cmp (struct timespec a, struct timespec b)
+47	{
+48	  int diff = a.tv_sec - b.tv_sec;
+49	  return diff ? diff : a.tv_nsec - b.tv_nsec;
+50	}
+
+I tried to print the values of a.tv_sec and b.tv_sec but the program said that
+the values were <optimized out>. The only variable I was able to see was diff
+in which the value of diff was 1541371629. This was a suspiciously large number
+so I believe that in the expression a.tv_sec - b.tv_sec, there may have been
+some sort of integer overflow that is causing the bug.
+
+
+8. Fix the bug in the corresponding source file
+Command: (gdb) q
+Command: cp lib/timespec.h timespec.h
+Command: vim timespec.h
+Command: diff -u lib/timespec.h timespec.h > lab4.diff
+Command: vim lab4.diff
+
+After exiting gdb, I went back into the coreutils-with-bug directory. Then I 
+made a copy of the timespec.h file using the command 'cp lib/timespec.h 
+timespec.h' and used vim to modify that copy. I changed the implementation of
+the function timespec_cmp by doing comparisons between a.tv_sec and b.tv_sec
+instead of the original subtraction. Once finished, I used the command 
+'diff -u lib/timespec.h timespec.h > lab4.diff' and added the prefix lib/
+to timespec.h to ensure that lib/timespec.h gets modified during the patch. I
+also modified lab4.diff using the ChangeLog format found on wiki. 
+
+
+9. Reproduce the problem in my home directory on SEASnet Linux servers. 
+Command: cd 
+Command: mkdir tmp
+Command: cd tmp
+Command: touch -d '1918-11-11 11:00 GMT' wwi-armistice
+Command: touch now
+Command: sleep 1
+Command: touch now1
+Command: TZ=UTC0 ls -lt --full-time wwi-armistice now now1
+
+I first used 'cd' to go back to my home directory. Then, following the commands 
+in the spec I get the following output:
+
+-rw-r--r-- 1 classyho class 0 2054-12-17 17:28:16.000000000 +0000 wwi-armistice
+-rw-r--r-- 1 classyho class 0 2018-11-05 00:30:06.206966000 +0000 now1
+-rw-r--r-- 1 classyho class 0 2018-11-05 00:30:01.352514000 +0000 now
+
+The SEASnet server's installed ls utility has a similar issue with the old 
+coreutils ls in which the wwi-armistice file is being displayed first as if it 
+is in the future. However, this time, the timestamp has also been modified in 
+which the year 1918 became 2054, hence the reason for it being displayed first.
+This issue may have been caused by some sort of signed and unsigned bit conversion
+since Linux uses UNIX timestamp which begins in 1970, thus dates before 1970 will
+be have negative timestamps. These negative timestamps may have been converted 
+by the SEASnet servers into positive timestamps that are in the future. 
+
